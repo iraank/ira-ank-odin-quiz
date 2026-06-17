@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Діагностика ясності — з Навігатором Одіном</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#020B0A; --bg2:#051F1B; --emerald:#1B5E43; --emerald-bright:#2E8B6B;
+    --gold:#E6C547; --gold-bright:#F5D966; --gold-soft:rgba(230,197,71,.15);
+    --cream:#F5F3EF; --cream-dim:#C8BFAE; --sage:#9DB0A4;
+    --green:#4CAF50; --yellow:#FFD700; --orange:#FF8800; --red:#FF6B5B;
+    --card:rgba(5,31,27,.7);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',sans-serif; color:var(--cream); min-height:100vh;
+    background:
+      radial-gradient(60% 50% at 80% 10%, rgba(46,139,107,.18), transparent 60%),
+      radial-gradient(50% 50% at 10% 90%, rgba(27,94,67,.22), transparent 60%),
+      linear-gradient(135deg,#020B0A,#051F1B 50%,#020B0A);
+    background-attachment:fixed;
+    display:flex; align-items:center; justify-content:center; padding:24px 16px;
+  }
+  .wrap{width:100%; max-width:600px}
+  /* progress */
+  #bar{position:fixed; top:0; left:0; height:4px; width:0;
+    background:linear-gradient(90deg,var(--emerald-bright),var(--gold)); transition:width .4s ease; z-index:10}
+  /* mascot */
+  .odin{width:140px;height:140px;margin:0 auto 18px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:74px;
+    background:radial-gradient(circle at 50% 40%, rgba(230,197,71,.14), transparent 70%);
+    filter:drop-shadow(0 0 24px rgba(230,197,71,.18))}
+  .odin-img{display:block;margin:0 auto 18px;width:180px;height:180px;object-fit:contain;
+    border-radius:22px;filter:drop-shadow(0 12px 32px rgba(0,0,0,.5));
+    animation:odinIn .5s ease, float 4.5s ease-in-out .5s infinite}
+  @keyframes odinIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes float{0%,100%{transform:translateY(0) scale(1) rotate(0)}
+    50%{transform:translateY(-12px) scale(1.025) rotate(-.6deg)}}
+  @media (prefers-reduced-motion:reduce){.odin-img{animation:none}}
+  .bubble{max-width:460px;margin:0 auto 26px;text-align:center;padding:14px 22px;
+    border:1px solid var(--gold-soft);border-radius:18px;background:rgba(27,94,67,.18);
+    color:var(--cream-dim);font-size:15px;line-height:1.55}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:34px;
+    text-align:center;line-height:1.15;margin-bottom:10px}
+  h1 em{color:var(--gold-bright);font-style:italic}
+  .eyebrow{text-align:center;letter-spacing:.22em;text-transform:uppercase;
+    font-size:12px;color:var(--sage);margin-bottom:22px;font-weight:500}
+  .sub{text-align:center;color:var(--cream-dim);font-size:16px;line-height:1.6;margin-bottom:26px}
+  /* options */
+  .opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+    padding:17px 18px;margin-bottom:12px;border:1px solid var(--gold-soft);
+    border-radius:14px;background:var(--card);color:var(--cream);font-size:15.5px;
+    line-height:1.4;cursor:pointer;transition:.18s;font-family:inherit}
+  .opt:hover{border-color:rgba(230,197,71,.5);transform:translateY(-1px)}
+  .opt.sel{border-color:var(--gold);box-shadow:0 0 20px rgba(230,197,71,.22);background:rgba(27,94,67,.3)}
+  .dot{width:13px;height:13px;border-radius:50%;flex-shrink:0}
+  .dot.green{background:var(--green)} .dot.yellow{background:var(--yellow)}
+  .dot.orange{background:var(--orange)} .dot.red{background:var(--red)}
+  /* buttons */
+  .btn{display:block;width:100%;padding:17px;margin-top:8px;border:none;border-radius:14px;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--bg);
+    font-family:inherit;font-weight:600;font-size:16px;cursor:pointer;transition:.2s;
+    box-shadow:0 0 26px rgba(230,197,71,.3)}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 0 36px rgba(230,197,71,.45)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none}
+  .ghost{background:none;border:1px solid var(--gold-soft);color:var(--cream-dim);
+    box-shadow:none;font-weight:400;font-size:14px;padding:12px;margin-top:14px}
+  .ghost:hover{box-shadow:none;border-color:var(--gold-soft)}
+  .back{background:none;border:none;color:var(--sage);font-family:inherit;font-size:14px;
+    cursor:pointer;margin-bottom:16px;padding:4px}
+  .counter{text-align:center;color:var(--sage);font-size:13px;margin-bottom:18px;letter-spacing:.1em}
+  /* inputs */
+  input,select,textarea{width:100%;padding:16px 18px;margin-bottom:14px;border-radius:14px;
+    border:1px solid var(--gold-soft);background:rgba(5,31,27,.6);color:var(--cream);
+    font-family:inherit;font-size:16px;outline:none}
+  input:focus,select,textarea:focus{border-color:var(--gold)}
+  label{display:block;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--sage);margin-bottom:8px;margin-top:6px}
+  /* result */
+  .scorebox{text-align:center;padding:24px;border:1px solid var(--gold-soft);border-radius:18px;
+    background:var(--card);margin-bottom:18px}
+  .score-num{font-family:'Cormorant Garamond',serif;font-size:56px;color:var(--gold-bright);font-weight:700;line-height:1}
+  .badge{display:inline-block;padding:6px 16px;border-radius:30px;font-size:13px;font-weight:600;margin-bottom:14px}
+  .metric{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--gold-soft)}
+  .metric:last-child{border:none}
+  .metric .lbl{font-size:13px;letter-spacing:.08em;color:var(--cream-dim)}
+  .metric .val{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold-bright);font-weight:600}
+  .insight{padding:18px;border-radius:14px;background:rgba(76,175,80,.1);border:1px solid var(--green);
+    margin:18px 0;line-height:1.6;font-size:15px}
+  .fade{animation:fade .45s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .hint{text-align:center;color:var(--sage);font-size:12px;margin-top:12px;line-height:1.5}
+  a{color:var(--gold-bright)}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="wrap" id="app"></div>
+
+<script>
+// ====== НАЛАШТУВАННЯ ======
+const WEB3FORMS_KEY = '264c3603-62ed-47d2-a5f8-b0f4c0f5c885'; // твій ключ (з quiz-unlocking) — заявки йдуть на пошту
+
+// ====== ДАНІ КВІЗА ======
+const TOTAL = 9; // екранів для прогрес-бару
+const questions = [
+  { key:'q1', title:'АНАЛІЗ ЯСНОСТІ', tech:'Сканування першого маркера…',
+    q:'Прямо зараз у твоєму бізнесі найгарячіша проблема:',
+    opts:[
+      {t:'Я знаю що робити, просто не вистачає часу / людей', c:'green', v:3},
+      {t:'Бачу 3-4 стратегії паралельно — не знаю яка правильна', c:'yellow', v:2},
+      {t:'Давно не змінював напрямок — боюсь що це буде помилка', c:'orange', v:1},
+      {t:'Знаю що щось не так, але не розумію що саме', c:'red', v:0},
+    ]},
+  { key:'q2', title:'ДІАГНОСТИКА ЕНЕРГІЇ', tech:'Оцінка рівня навантаження…',
+    q:'Як твоя енергія змінювалась останні 6 місяців?',
+    opts:[
+      {t:'Стабільна, як мотор на крейсерській швидкості', c:'green', v:3},
+      {t:'Скаче: то я на піку, то хочу все кинути', c:'yellow', v:2},
+      {t:'Падає — вранку важко встати, попереду важкий день', c:'orange', v:1},
+      {t:'Залежить від результатів: геній або невдаха, між тим нічого', c:'red', v:0},
+    ]},
+  { key:'q3', title:'КОМАНДНА ДИНАМІКА', tech:'Сканування взаємодій…', multi:true,
+    q:'Що з цього відчуваєш у команді? (обери все що підходить)',
+    opts:[
+      {t:'Закриваю дірки своєю енергією — люди чекають що я вирішу', c:'red', v:1},
+      {t:'Топи розуміють не те що я задумав — результат не той', c:'orange', v:1},
+      {t:'Люди невмотивовані, а я не знаю як це змінити', c:'yellow', v:1},
+      {t:'Команда крихка — коли хтось пішов, усе впало', c:'yellow', v:1},
+    ]},
+  { key:'q4', title:'КАЛІБРУВАННЯ ЦІННОСТЕЙ', tech:'Визначення пріоритетів…',
+    q:'Коли думаєш про успіх, найважливіше для тебе:',
+    opts:[
+      {t:'Вплив і гроші однаково — обоє потрібні', c:'green', v:3},
+      {t:'Вплив, а гроші як підтвердження', c:'yellow', v:2},
+      {t:'Гроші, щоб мати свободу робити вплив', c:'orange', v:1},
+      {t:'Не впевнений — успіх виглядає по-різному в різні дні', c:'red', v:0},
+    ]},
+  { key:'q5', title:'ШВИДКІСТЬ РІШЕНЬ', tech:'Аналіз паттернів дії…',
+    q:'Коли приймаєш важливе рішення:',
+    opts:[
+      {t:'Швидко, без розмислів, потім адаптую на ходу', c:'green', v:3},
+      {t:'Аналізую, але як почну — йду напролом', c:'yellow', v:2},
+      {t:'Шкодую що не встиг прорахувати всі наслідки', c:'orange', v:1},
+      {t:'Чекаю поки не буду на 100% впевнений — часто це запізно', c:'red', v:0},
+    ]},
+  { key:'q6', title:'КОНТЕКСТНА КАЛІБРУВАННЯ', tech:'Фінальна калібрування…',
+    q:'Як війна впливає на твою систему цінностей?',
+    opts:[
+      {t:'Розумію що мої гроші — мої, я можу ними користуватись', c:'green', v:3},
+      {t:'Планування більш ніж на 6 місяців виглядає абсурдно', c:'yellow', v:2},
+      {t:'Відчуваю провину за успіх — заборона радіти', c:'orange', v:1},
+      {t:'Це не впливає, я граю як завжди', c:'red', v:0},
+    ]},
+];
+
+const segments = {
+  energy:{ name:'Енергія на межі', color:'var(--red)',
+    text:'Твоя система дала тріщину. Ти гасиш пожежі своєю енергією, і її лишається все менше. Тут не оптимізація — тут перебудова.',
+    insight:'Я чую, що ти тримаєш на собі занадто багато. Не тому що так треба — а тому що поки не видно, як інакше.' },
+  map:{ name:'Цільний без карти', color:'var(--green)',
+    text:'Ти готовий рухатись. Проблема не в тобі — а в тому, що ти один у цьому полі. Тобі не бракує сили, тобі бракує партнера.',
+    insight:'Я чую людину, яка знає куди йде. Залишилось одне: щоб поруч був хтось, хто бачить твої сліпі зони.' },
+  analysis:{ name:'Параліч вибору', color:'var(--yellow)',
+    text:'Твоя сила — у швидкості рішень. А зараз ти її заморозив: аналізуєш замість діяти. Час повернути собі цю швидкість.',
+    insight:'Я чую, що варіантів багато, а ясності мало. Це не про брак розуму — це про брак фокусу.' },
+};
+
+// ====== СТАН ======
+let step = 0;          // 0 = ім'я; 1..6 = питання; 7 = результат; 8 = форма; 9 = дякую
+let answers = {};
+let name = '';
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const save = ()=>localStorage.setItem('odin_quiz', JSON.stringify({step,answers,name}));
+const load = ()=>{try{const s=JSON.parse(localStorage.getItem('odin_quiz'));if(s){step=s.step;answers=s.answers;name=s.name||''}}catch(e){}};
+
+function setBar(){ bar.style.width = Math.min(100, (step/TOTAL)*100) + '%'; }
+
+// ====== СКОРИНГ ======
+function calc(){
+  const singles = ['q1','q2','q4','q5','q6'];
+  let sum = 0; singles.forEach(k=> sum += (answers[k]?.v ?? 0));
+  const score = (sum/15)*10;
+  const clarity = Math.round(((answers.q1?.v??0)+(answers.q4?.v??0))/6*100);
+  const energy  = Math.round(((answers.q2?.v??0)+(answers.q5?.v??0))/6*100);
+  const team    = Math.round((4-(answers.q3?.length??0))/4*100);
+  // сегмент
+  let seg='map';
+  if(energy<=40 || score<5) seg='energy';
+  else if(clarity<=50) seg='analysis';
+  return {score:score.toFixed(1), clarity, energy, team, seg};
+}
+
+// ====== РЕНДЕР ======
+function render(){
+  setBar(); save(); window.scrollTo(0,0);
+  if(step===0) return screenName();
+  if(step>=1 && step<=6) return screenQ(step-1);
+  if(step===7) return screenResult();
+  if(step===8) return screenForm();
+  if(step===9) return screenThanks();
+}
+
+function odin(face){ return `<img src="img/odin-hello.png" alt="Одін" class="odin-img">`; }
+
+function screenName(){
+  app.innerHTML = odin('🧭') +
+   `<div class="bubble fade">Пррррривіт, я <b>Одін</b>. Я тут уже давненько. Послухаю тебе, розкажеш?</div>
+    <h1 class="fade">Давай <em>познайомимось</em></h1>
+    <label>Як тебе звати?</label>
+    <input id="nm" placeholder="Ім'я" value="${name.replace(/"/g,'&quot;')}" autocomplete="given-name">
+    <button class="btn" id="go">Далі →</button>`;
+  const nm=document.getElementById('nm');
+  const go=document.getElementById('go');
+  const ok=()=>{ name=nm.value.trim(); go.disabled=name.length<2; };
+  nm.oninput=ok; ok(); nm.focus();
+  nm.onkeydown=e=>{ if(e.key==='Enter'&&name.length>=2){step=1;render();} };
+  go.onclick=()=>{ step=1; render(); };
+}
+
+function screenQ(i){
+  const Q=questions[i];
+  const cur = answers[Q.key];
+  const optsHtml = Q.opts.map((o,idx)=>{
+    const sel = Q.multi ? (cur||[]).some(x=>x.idx===idx) : cur?.idx===idx;
+    return `<button class="opt ${sel?'sel':''}" data-i="${idx}">
+      <span class="dot ${o.c}"></span><span>${o.t}</span></button>`;
+  }).join('');
+  app.innerHTML =
+    `<button class="back" id="bk">← Назад</button>
+     <img src="img/odin-hello.png" alt="Одін" class="odin-img" style="width:96px;height:96px;margin-bottom:8px">
+
+
+     <div class="eyebrow fade">${Q.title}</div>
+     <div class="counter">${i+1} / 6 · ${Q.tech}</div>
+     <h1 class="fade" style="font-size:26px">${Q.q}</h1>
+     <div class="fade" style="margin-top:20px">${optsHtml}</div>
+     ${Q.multi?`<button class="btn" id="next">Далі →</button>`:''}`;
+  document.getElementById('bk').onclick=()=>{ step--; render(); };
+  app.querySelectorAll('.opt').forEach(b=>{
+    b.onclick=()=>{
+      const idx=+b.dataset.i, o=Q.opts[idx];
+      if(Q.multi){
+        let arr=answers[Q.key]||[];
+        if(arr.some(x=>x.idx===idx)) arr=arr.filter(x=>x.idx!==idx);
+        else arr=[...arr,{idx,v:o.v}];
+        answers[Q.key]=arr; render();
+      } else {
+        answers[Q.key]={idx,v:o.v};
+        save(); setTimeout(()=>{ step++; render(); },180);
+      }
+    };
+  });
+  if(Q.multi){ document.getElementById('next').onclick=()=>{ if(!answers[Q.key])answers[Q.key]=[]; step++; render(); }; }
+}
+
+function screenResult(){
+  const r=calc(); const S=segments[r.seg];
+  let bcolor,blabel;
+  if(r.score>=8){bcolor='var(--green)';blabel='Система в балансі'}
+  else if(r.score>=5){bcolor='var(--yellow)';blabel='Є сигнали'}
+  else if(r.score>=3){bcolor='var(--orange)';blabel='Система перевантажена'}
+  else {bcolor='var(--red)';blabel='Час перезавантаження'}
+  app.innerHTML = odin('🧭') +
+   `<div class="eyebrow fade">${S.name}</div>
+    <h1 class="fade">Привіт, <em>${name||'друже'}</em>.<br>Я слухав. Ось що я бачу.</h1>
+    <div class="scorebox fade" style="margin-top:22px">
+      <div class="badge" style="background:${bcolor};color:#04140e">${blabel}</div>
+      <div class="score-num">${r.score}<span style="font-size:24px;color:var(--cream-dim)"> / 10</span></div>
+      <div style="color:var(--sage);font-size:13px;letter-spacing:.1em;margin-top:6px">НАВІГАЦІЙНИЙ ІНДЕКС ЯСНОСТІ</div>
+    </div>
+    <div class="scorebox fade">
+      <div class="metric"><span class="lbl">Ясність шляху</span><span class="val">${r.clarity}%</span></div>
+      <div class="metric"><span class="lbl">Енергійність</span><span class="val">${r.energy}%</span></div>
+      <div class="metric"><span class="lbl">Командна синхронізація</span><span class="val">${r.team}%</span></div>
+    </div>
+    <p class="sub fade" style="text-align:left">${S.text}</p>
+    <div class="insight fade">🧭 <b>Що я чую в твоїх словах:</b><br>${S.insight}</div>
+    <button class="btn" id="go">Записатись на діагностику ясності →</button>
+    <p class="hint">45 хвилин · безкоштовно · один на один</p>`;
+  document.getElementById('go').onclick=()=>{ step=8; render(); };
+}
+
+function screenForm(){
+  app.innerHTML =
+   `<button class="back" id="bk">← Назад</button>
+    <div class="odin fade" style="width:84px;height:84px;font-size:42px">🐾</div>
+    <h1 class="fade">Скажи, де тебе <em>зловити</em></h1>
+    <p class="sub fade">Кілька рядків — і я знатиму, як підготуватись до нашої розмови.</p>
+    <div class="fade">
+      <label>E-mail для звʼязку</label>
+      <input id="em" type="email" placeholder="ti@example.com">
+      <label>Телефон / Telegram (необовʼязково)</label>
+      <input id="ph" placeholder="+380…">
+      <label>Коли тобі найзручніше?</label>
+      <select id="tm">
+        <option>Пн–Ср, 10:00–12:00</option>
+        <option>Пн–Ср, 14:00–16:00</option>
+        <option>Чт–Пт, 10:00–12:00</option>
+        <option>Чт–Пт, 14:00–16:00</option>
+        <option>Вихідні, 16:00–18:00</option>
+      </select>
+      <button class="btn" id="send">Записатись безкоштовно</button>
+      <p class="hint">Натискаючи, ти погоджуєшся з <a href="#">політикою конфіденційності</a></p>
+    </div>`;
+  document.getElementById('bk').onclick=()=>{ step=7; render(); };
+  document.getElementById('send').onclick=async()=>{
+    const em=document.getElementById('em').value.trim();
+    if(!/.+@.+\..+/.test(em)){ document.getElementById('em').style.borderColor='var(--red)'; return; }
+    const r=calc();
+    const btn=document.getElementById('send'); btn.disabled=true; btn.textContent='Відправляю…';
+    const payload={
+      access_key: WEB3FORMS_KEY,            // ← встав сюди ключ Web3Forms (як на landing-version2)
+      subject:`🧭 Нова заявка на діагностику: ${name}`,
+      from_name:'Квіз Одіна',
+      'Імʼя':name, 'E-mail':em,
+      'Телефон/Telegram':document.getElementById('ph').value,
+      'Зручний час':document.getElementById('tm').value,
+      'Сегмент':segments[r.seg].name,
+      'Скор':`${r.score}/10`,
+      'Ясність':r.clarity+'%', 'Енергія':r.energy+'%', 'Команда':r.team+'%',
+    };
+    try{
+      if(WEB3FORMS_KEY && WEB3FORMS_KEY!=='YOUR_WEB3FORMS_ACCESS_KEY'){
+        await fetch('https://api.web3forms.com/submit',{method:'POST',
+          headers:{'Content-Type':'application/json',Accept:'application/json'},
+          body:JSON.stringify(payload)});
+      } else { console.log('LEAD (ключ не встановлено) →', payload); }
+      if(window.fbq) fbq('track','CompleteRegistration',{content_name:'diagnostika',value:0,currency:'UAH'});
+    }catch(e){ console.warn('submit error',e); }
+    step=9; render();
+  };
+}
+
+function screenThanks(){
+  const r=calc();
+  app.innerHTML = odin('😺') +
+   `<h1 class="fade">Мур-р-р. Тепер ми <em>знайомі</em>, ${name||'друже'} 😺</h1>
+    <p class="sub fade">Я почув тебе. Готуватимусь до нашої розмови так само уважно, як і ти.</p>
+    <div class="scorebox fade" style="text-align:left">
+      <p style="line-height:1.7"><b>Що далі:</b><br>
+      1️⃣ На пошту прийде посилання на Zoom (перевір спам)<br>
+      2️⃣ За день до сесії я напишу — про що нам поговорити<br>
+      3️⃣ Приходь з однією областю, що хвилює найбільше</p>
+    </div>
+    <button class="ghost" id="again">Пройти ще раз</button>`;
+  document.getElementById('again').onclick=()=>{ localStorage.removeItem('odin_quiz'); step=0;answers={};name=''; render(); };
+}
+
+load(); render();
+</script>
+</body>
+</html>
