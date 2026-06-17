@@ -212,7 +212,7 @@ function render(){
   if(step===9) return screenThanks();
 }
 
-function odin(face){ return `<img src="img/odin-hello.png" alt="Одін" class="odin-img">`; }
+function odin(face){ return `<video class="odinvid fade" src="odin.mp4" autoplay loop muted playsinline></video>`; }
 
 function screenName(){
   app.innerHTML =
@@ -240,7 +240,7 @@ function screenQ(i){
   }).join('');
   app.innerHTML =
     `<button class="back" id="bk">← Назад</button>
-     <img src="img/odin-hello.png" alt="Одін" class="odin-img" style="width:96px;height:96px;margin-bottom:8px">
+     <video class="odinvid fade" src="odin.mp4" autoplay loop muted playsinline style="width:110px;height:110px;margin-bottom:4px"></video>
 
 
      <div class="eyebrow fade">${Q.title}</div>
@@ -360,7 +360,9 @@ function screenThanks(){
   document.getElementById('again').onclick=()=>{ localStorage.removeItem('odin_quiz'); step=0;answers={};name=''; render(); };
 }
 
-load(); render();
+// завжди старт із першої сторінки (без авто-резюму на результат)
+localStorage.removeItem('odin_quiz'); step=0; answers={}; name='';
+render();
 </script>
 </body>
 </html>
