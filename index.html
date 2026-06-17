@@ -34,6 +34,11 @@
     display:flex;align-items:center;justify-content:center;font-size:74px;
     background:radial-gradient(circle at 50% 40%, rgba(230,197,71,.14), transparent 70%);
     filter:drop-shadow(0 0 24px rgba(230,197,71,.18))}
+  .odinvid{display:block;margin:0 auto 14px;width:230px;height:230px;border-radius:50%;
+    object-fit:cover;object-position:50% 38%;
+    -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 56%,transparent 74%);
+    mask-image:radial-gradient(circle at 50% 50%,#000 56%,transparent 74%);
+    filter:drop-shadow(0 6px 30px rgba(230,197,71,.2))}
   .odin-img{display:block;margin:0 auto 18px;width:180px;height:180px;object-fit:contain;
     border-radius:22px;filter:drop-shadow(0 12px 32px rgba(0,0,0,.5));
     animation:odinIn .5s ease, float 4.5s ease-in-out .5s infinite}
@@ -210,8 +215,9 @@ function render(){
 function odin(face){ return `<img src="img/odin-hello.png" alt="Одін" class="odin-img">`; }
 
 function screenName(){
-  app.innerHTML = odin('🧭') +
-   `<div class="bubble fade">Пррррривіт, я <b>Одін</b>. Я тут уже давненько. Послухаю тебе, розкажеш?</div>
+  app.innerHTML =
+   `<video class="odinvid fade" src="odin.mp4" autoplay loop muted playsinline></video>
+    <div class="bubble fade">Пррррривіт, я <b>Одін</b>. Я тут уже давненько. Послухаю тебе, розкажеш?</div>
     <h1 class="fade">Давай <em>познайомимось</em></h1>
     <label>Як тебе звати?</label>
     <input id="nm" placeholder="Ім'я" value="${name.replace(/"/g,'&quot;')}" autocomplete="given-name">
@@ -267,8 +273,9 @@ function screenResult(){
   else if(r.score>=5){bcolor='var(--emerald-bright)';blabel='Міцна база, є куди рости'}
   else if(r.score>=3){bcolor='var(--gold)';blabel='Хороший потенціал до підсилення'}
   else {bcolor='var(--gold-bright)';blabel='Готовий до нового рівня'}
-  app.innerHTML = odin('🧭') +
-   `<div class="eyebrow fade">${S.name}</div>
+  app.innerHTML =
+   `<video class="odinvid fade" src="odin.mp4" autoplay loop muted playsinline></video>
+    <div class="eyebrow fade">${S.name}</div>
     <h1 class="fade">Привіт, <em>${name||'друже'}</em>.<br>Я слухав. Ось що я бачу.</h1>
     <div class="scorebox fade" style="margin-top:22px">
       <div class="badge" style="background:${bcolor};color:#04140e">${blabel}</div>
