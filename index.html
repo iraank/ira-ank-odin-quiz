@@ -113,6 +113,9 @@
   @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   .hint{text-align:center;color:var(--sage);font-size:12px;margin-top:12px;line-height:1.5}
   a{color:var(--gold-bright)}
+  .msn-btn{flex:1;padding:13px 6px;border-radius:12px;border:1px solid var(--gold-soft);
+    background:var(--card);color:var(--cream-dim);font-family:inherit;font-size:14px;cursor:pointer;transition:.18s}
+  .msn-btn.active,.msn-btn:hover{border-color:var(--gold);color:var(--cream);background:rgba(27,94,67,.3)}
 </style>
 </head>
 <body>
@@ -121,7 +124,9 @@
 
 <script>
 // ====== НАЛАШТУВАННЯ ======
-const WEB3FORMS_KEY = '264c3603-62ed-47d2-a5f8-b0f4c0f5c885'; // твій ключ (з quiz-unlocking) — заявки йдуть на пошту
+const WEB3FORMS_KEY = '264c3603-62ed-47d2-a5f8-b0f4c0f5c885';
+const IRA_TELEGRAM  = 'iraank';        // ← твій @нік в Telegram (без @)
+const IRA_WHATSAPP  = '';              // ← номер для WhatsApp: 380XXXXXXXXX (без +)
 
 // ====== ДАНІ КВІЗА ======
 const TOTAL = 9; // екранів для прогрес-бару
@@ -310,50 +315,65 @@ function screenResult(){
 function screenForm(){
   app.innerHTML =
    `<button class="back" id="bk">← Назад</button>
-    <div class="odin fade" style="width:84px;height:84px;font-size:42px">🐾</div>
+    <video class="odinvid fade" src="odin.mp4" autoplay loop muted playsinline style="width:110px;height:110px;margin-bottom:8px"></video>
     <h1 class="fade">Скажи, де тебе <em>зловити</em></h1>
-    <p class="sub fade">Кілька рядків — і я знатиму, як підготуватись до нашої розмови.</p>
+    <p class="sub fade">Один крок — і Одін знатиме, де тебе знайти.</p>
     <div class="fade">
-      <label>E-mail для звʼязку</label>
-      <input id="em" type="email" placeholder="ti@example.com">
-      <label>Телефон / Telegram (необовʼязково)</label>
-      <input id="ph" placeholder="+380…">
-      <label>Коли тобі найзручніше?</label>
-      <select id="tm">
-        <option>Пн–Ср, 10:00–12:00</option>
-        <option>Пн–Ср, 14:00–16:00</option>
-        <option>Чт–Пт, 10:00–12:00</option>
-        <option>Чт–Пт, 14:00–16:00</option>
-        <option>Вихідні, 16:00–18:00</option>
-      </select>
-      <button class="btn" id="send">Записатись безкоштовно</button>
+      <label>Як зручніше зв'язатись?</label>
+      <div style="display:flex;gap:10px;margin-bottom:18px">
+        <button class="msn-btn active" data-m="telegram">✈️ Telegram</button>
+        <button class="msn-btn" data-m="whatsapp">💬 WhatsApp</button>
+        <button class="msn-btn" data-m="phone">📞 Телефон</button>
+      </div>
+      <input id="contact" placeholder="@нікнейм в Telegram" autocomplete="tel">
+      <button class="btn" id="send">Забронювати зустріч →</button>
       <p class="hint">Натискаючи, ти погоджуєшся з <a href="#">політикою конфіденційності</a></p>
     </div>`;
   document.getElementById('bk').onclick=()=>{ step=7; render(); };
+  let messenger='telegram';
+  const inp=document.getElementById('contact');
+  const updatePH=()=>{
+    if(messenger==='telegram') inp.placeholder='@нікнейм в Telegram';
+    else if(messenger==='whatsapp') inp.placeholder='+380… для WhatsApp';
+    else inp.placeholder='+380… телефон';
+    inp.type=messenger==='telegram'?'text':'tel';
+  };
+  app.querySelectorAll('.msn-btn').forEach(b=>{
+    b.onclick=()=>{
+      messenger=b.dataset.m;
+      app.querySelectorAll('.msn-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      updatePH();
+    };
+  });
   document.getElementById('send').onclick=async()=>{
-    const em=document.getElementById('em').value.trim();
-    if(!/.+@.+\..+/.test(em)){ document.getElementById('em').style.borderColor='var(--red)'; return; }
+    const contact=inp.value.trim();
+    if(!contact){ inp.style.borderColor='var(--red)'; return; }
+    const btn=document.getElementById('send'); btn.disabled=true; btn.textContent='Зараз…';
     const r=calc();
-    const btn=document.getElementById('send'); btn.disabled=true; btn.textContent='Відправляю…';
     const payload={
-      access_key: WEB3FORMS_KEY,            // ← встав сюди ключ Web3Forms (як на landing-version2)
-      subject:`🧭 Нова заявка на діагностику: ${name}`,
+      access_key:WEB3FORMS_KEY,
+      subject:`🧭 Нова заявка: ${name} (${messenger})`,
       from_name:'Квіз Одіна',
-      'Імʼя':name, 'E-mail':em,
-      'Телефон/Telegram':document.getElementById('ph').value,
-      'Зручний час':document.getElementById('tm').value,
-      'Сегмент':segments[r.seg].name,
-      'Скор':`${r.score}/10`,
-      'Ясність':r.clarity+'%', 'Енергія':r.energy+'%', 'Команда':r.team+'%',
+      'Імʼя':name, 'Месенджер':messenger, 'Контакт':contact,
+      'Сегмент':segments[r.seg].name, 'Скор':`${r.score}/10`,
+      'Ясність':r.clarity+'%','Енергія':r.energy+'%','Команда':r.team+'%',
     };
     try{
       if(WEB3FORMS_KEY && WEB3FORMS_KEY!=='YOUR_WEB3FORMS_ACCESS_KEY'){
         await fetch('https://api.web3forms.com/submit',{method:'POST',
           headers:{'Content-Type':'application/json',Accept:'application/json'},
           body:JSON.stringify(payload)});
-      } else { console.log('LEAD (ключ не встановлено) →', payload); }
+      }
       if(window.fbq) fbq('track','CompleteRegistration',{content_name:'diagnostika',value:0,currency:'UAH'});
     }catch(e){ console.warn('submit error',e); }
+    if(messenger==='telegram'&&IRA_TELEGRAM){
+      const msg=encodeURIComponent('Привіт! Я пройшла діагностику ясності і хочу записатись.');
+      window.open(`https://t.me/${IRA_TELEGRAM}?text=${msg}`,'_blank');
+    } else if(messenger==='whatsapp'&&IRA_WHATSAPP){
+      const msg=encodeURIComponent('Привіт! Я пройшла діагностику ясності і хочу записатись.');
+      window.open(`https://wa.me/${IRA_WHATSAPP}?text=${msg}`,'_blank');
+    }
     step=9; render();
   };
 }
